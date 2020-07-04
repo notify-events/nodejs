@@ -1,0 +1,8 @@
+{
+  "name": "notify.events",
+  "version": "1.0.0",
+  "dependencies": {
+    "form-data": "^3.0.0",
+    "node-fetch": "^2.6.0"
+  }
+}
