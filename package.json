@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ionian-wind/notify-events.git"
+    "url": "git+https://github.com/notify-events/nodejs.git"
   },
   "keywords": [
     "notification",
@@ -24,7 +24,21 @@
     "voice",
     "call"
   ],
-  "author": "Dmitriy Shadrunov <ionian.wind@gmail.com>",
+  "author": "Notify.Events <support@notify.events>",
+  "contributors": [
+    {
+      "name": "Dmitriy Shadrunov",
+      "email": "ionian.wind@gmail.com"
+    },
+    {
+      "name": "Alex Kustov",
+      "email": "a.kustov@notify.events"
+    },
+    {
+      "name": "Oleg Matrozov",
+      "email": "a.kustov@notify.events"
+    }
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/notify-events/nodejs/issues"
