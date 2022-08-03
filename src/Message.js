@@ -49,6 +49,14 @@ const appendFile = (data, keyName) => async ({ file, filename, contentType }) =>
  * Class Message
  */
 class Message {
+    #title;
+    #content;
+    #priority;
+    #level;
+    #files = [];
+    #images = [];
+    #actions = [];
+
     /**
      * Message constructor.
      * @param {string} content Message text
@@ -57,22 +65,6 @@ class Message {
      * @param {string} level Level
      */
     constructor(content = '', title = '', priority = Message.PRIORITY_NORMAL, level = Message.LEVEL_INFO) {
-        /** @var string */
-        this._title = null;
-        /** @var string */
-        this._content = null;
-        /** @var string */
-        this._priority = null;
-        /** @var string */
-        this._level = null;
-        //
-        /** @var array */
-        this._files = [];
-        /** @var array */
-        this._images = [];
-        /** @var array */
-        this._actions = [];
-
         this
             .setContent(content)
             .setTitle(title)
@@ -135,28 +127,36 @@ class Message {
     async send(token) {
         const data = new FormData();
 
-        if (this._title) {
-            data.append('title', this._title);
+        if (this.#title) {
+            data.append('title', this.#title);
         }
 
-        data.append('content',  this._content);
-        data.append('priority', this._priority);
-        data.append('level',    this._level);
+        data.append('content',  this.#content);
+        data.append('priority', this.#priority);
+        data.append('level',    this.#level);
 
-        if (this._images.length > 0 || this._files.length > 0) {
+        if (this.#images.length > 0 || this.#files.length > 0) {
             await Promise.all([
-                ...this._images.map(appendFile(data, 'images[]')),
-                ...this._files.map(appendFile(data, 'files[]'))
+                ...this.#images.map(appendFile(data, 'images[]')),
+                ...this.#files.map(appendFile(data, 'files[]'))
             ]);
         }
 
-        if (this._actions.length > 0) {
-            this._actions.forEach(function (action) {
-                data.append('actions[]', action.name + '|' + action.title + '|' + action.url);
+        if (this.#actions.length > 0) {
+            this.#actions.forEach(function (action, idx) {
+                data.append('actions[' + idx + '][name]', action.name);
+                data.append('actions[' + idx + '][title]', action.title);
+                data.append('actions[' + idx + '][content_url]', action.content_url);
+                data.append('actions[' + idx + '][content_method]', action.content_method);
+                data.append('actions[' + idx + '][content_content]', action.content_content);
+
+                for (const [key, value] of Object.entries(action.content_headers)) {
+                    data.append('actions[' + idx + '][content_headers][' + encodeURI(key) + ']', value);
+                }
             });
         }
 
-        await request({
+        return await request({
             url: `https://notify.events/api/v1/channel/source/${token}/execute`,
             method: 'post',
             data
@@ -170,7 +170,7 @@ class Message {
      * @returns {Message}
      */
     setTitle(title) {
-        this._title = title;
+        this.#title = title;
 
         return this;
     }
@@ -181,7 +181,7 @@ class Message {
      * @returns {string}
      */
     getTitle() {
-        return this._title;
+        return this.#title;
     }
 
     /**
@@ -191,7 +191,7 @@ class Message {
      * @returns {Message}
      */
     setContent(content) {
-        this._content = content;
+        this.#content = content;
 
         return this;
     }
@@ -202,7 +202,7 @@ class Message {
      * @returns {string}
      */
     getContent() {
-        return this._content;
+        return this.#content;
     }
 
     /**
@@ -225,7 +225,7 @@ class Message {
             throw new InvalidArgumentError('Invalid priority value');
         }
 
-        this._priority = priority;
+        this.#priority = priority;
 
         return this;
     }
@@ -236,7 +236,7 @@ class Message {
      * @returns {string}
      */
     getPriority() {
-        return this._priority;
+        return this.#priority;
     }
 
     /**
@@ -260,7 +260,7 @@ class Message {
             throw new InvalidArgumentError('Invalid level value');
         }
 
-        this._level = level;
+        this.#level = level;
 
         return this;
     }
@@ -271,7 +271,7 @@ class Message {
      * @returns string
      */
     getLevel() {
-        return this._level;
+        return this.#level;
     }
 
     /**
@@ -284,7 +284,7 @@ class Message {
      * @throws InvalidArgumentError
      */
     addFile(file, filename = 'file.dat', contentType= 'application/octet-stream') {
-        this._files.push({
+        this.#files.push({
             file: file,
             filename,
             contentType
@@ -303,7 +303,7 @@ class Message {
      * @throws InvalidArgumentError
      */
     addImage(image, filename = 'file.dat', contentType= 'application/octet-stream') {
-        this._images.push({
+        this.#images.push({
             file: image,
             filename,
             contentType
@@ -317,18 +317,24 @@ class Message {
      *
      * @param {string} name Action name
      * @param {string} title Action title (button title)
-     * @param {string} [url] Action callback URL
+     * @param {string} [callback_url] Action callback URL
+     * @param {string} [callback_method] Action callback method
+     * @param {array} [callback_headers] Action callback headers
+     * @param {string} [callback_content] Action callback content
      * @returns {Message}
      */
-    addAction(name, title, url = undefined) {
-        if ((url !== undefined) && !validateUrl(url)) {
-            throw new InvalidArgumentError('invalid url');
+    addAction(name, title, callback_url = undefined, callback_method = 'get', callback_headers = [], callback_content = '') {
+        if ((callback_url !== undefined) && !validateUrl(callback_url)) {
+            throw new InvalidArgumentError('Invalid callback url');
         }
 
-        this._actions.push({
-            name:  name,
-            title: title,
-            url:   url,
+        this.#actions.push({
+            name:             name,
+            title:            title,
+            callback_url:     callback_url,
+            callback_method:  callback_method,
+            callback_headers: callback_headers,
+            callback_content: callback_content,
         });
 
         return this;
