@@ -146,12 +146,12 @@ class Message {
             this.#actions.forEach(function (action, idx) {
                 data.append('actions[' + idx + '][name]', action.name);
                 data.append('actions[' + idx + '][title]', action.title);
-                data.append('actions[' + idx + '][content_url]', action.content_url);
-                data.append('actions[' + idx + '][content_method]', action.content_method);
-                data.append('actions[' + idx + '][content_content]', action.content_content);
+                data.append('actions[' + idx + '][callback_url]', action.callback_url);
+                data.append('actions[' + idx + '][callback_method]', action.callback_method);
+                data.append('actions[' + idx + '][callback_content]', action.callback_content);
 
-                for (const [key, value] of Object.entries(action.content_headers)) {
-                    data.append('actions[' + idx + '][content_headers][' + encodeURI(key) + ']', value);
+                for (const [key, value] of Object.entries(action.callback_headers)) {
+                    data.append('actions[' + idx + '][callback_headers][' + encodeURI(key) + ']', value);
                 }
             });
         }
